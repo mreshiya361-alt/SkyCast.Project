@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#080d19">
+  <meta name="description" content="SkyCast — a premium weather dashboard with live conditions and a 7-day forecast.">
+  <title>SkyCast — Weather, beautifully clear</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+  <link rel="stylesheet" href="style.css">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+</head>
+<body>
+  <div class="ambient ambient-one"></div>
+  <div class="ambient ambient-two"></div>
+  <main class="app-shell">
+    <header class="topbar">
+      <a class="brand" href="#" aria-label="SkyCast home">
+        <span class="brand-mark"><i data-lucide="cloud-sun"></i></span>
+        <span>sky<span class="brand-light">cast</span><small>WEATHER STUDIO</small></span>
+      </a>
+      <div class="top-actions">
+        <div class="live-indicator"><span></span> LIVE WEATHER</div>
+        <button class="icon-button" id="unitToggle" aria-label="Toggle temperature units" title="Switch °C / °F"><span id="unitLabel">°C</span></button>
+        <button class="icon-button" id="themeToggle" aria-label="Toggle appearance" title="Toggle appearance"><i data-lucide="sun-moon"></i></button>
+      </div>
+    </header>
+
+    <section class="intro-row">
+      <div>
+        <p class="eyebrow">YOUR PERSONAL WEATHER DESK</p>
+        <h1>Weather, <span>beautifully clear.</span></h1>
+        <p class="subheading">A little more clarity for wherever the day takes you.</p>
+      </div>
+      <div class="updated-pill"><i data-lucide="refresh-cw"></i><span id="updatedAt">Getting latest conditions…</span></div>
+    </section>
+
+    <section class="search-panel">
+      <div class="search-wrap">
+        <i data-lucide="search"></i>
+        <input id="cityInput" type="search" placeholder="Search city, e.g. Rajkot, London, Tokyo" autocomplete="off" aria-label="Search city">
+        <button id="clearSearch" class="clear-search" aria-label="Clear search"><i data-lucide="x"></i></button>
+        <button id="searchBtn" class="search-button">Search <i data-lucide="arrow-up-right"></i></button>
+      </div>
+      <button id="locationBtn" class="location-button"><i data-lucide="locate-fixed"></i><span>Use my location</span></button>
+      <div id="suggestions" class="suggestions hidden"></div>
+    </section>
+
+    <div id="errorBox" class="error-box hidden" role="alert"></div>
+
+    <section class="main-grid">
+      <article class="hero-card glass-card">
+        <div class="hero-top">
+          <div>
+            <p class="eyebrow">CURRENT CONDITIONS</p>
+            <h2 id="cityName">Rajkot</h2>
+            <p class="location-meta" id="locationMeta">Gujarat, India <span>•</span> Local time</p>
+          </div>
+          <button class="favorite-button" id="favoriteBtn" aria-label="Save favorite city" title="Save favorite"><i data-lucide="heart"></i></button>
+        </div>
+        <div class="current-weather">
+          <div class="temperature-block">
+            <div class="temperature"><span id="temperature">--</span><sup id="degree">°C</sup></div>
+            <p id="conditionText">Loading conditions</p>
+            <div class="feels-like">Feels like <strong id="feelsLike">--°</strong></div>
+          </div>
+          <div class="weather-art" id="weatherArt"><div class="sun-core"></div><div class="cloud-shape"></div><div class="cloud-shadow"></div></div>
+        </div>
+        <div class="hero-footer">
+          <div><i data-lucide="sunrise"></i><span>Sunrise</span><strong id="sunrise">--:--</strong></div>
+          <div><i data-lucide="sunset"></i><span>Sunset</span><strong id="sunset">--:--</strong></div>
+          <div><i data-lucide="sun"></i><span>Daylight</span><strong id="daylightDuration">--</strong></div>
+          <div><i data-lucide="calendar-days"></i><span>Today</span><strong id="todayDate">--</strong></div>
+        </div>
+      </article>
+
+      <article class="side-card glass-card">
+        <div class="card-heading"><div><p class="eyebrow">AT A GLANCE</p><h3>Today's highlights</h3></div><span class="heading-icon"><i data-lucide="activity"></i></span></div>
+        <div class="metrics-grid">
+          <div class="metric"><div class="metric-label"><i data-lucide="wind"></i> Wind speed</div><strong id="windSpeed">--</strong><small id="windDirection">-- direction</small></div>
+          <div class="metric"><div class="metric-label"><i data-lucide="droplets"></i> Humidity</div><strong id="humidity">--</strong><small>Relative humidity</small></div>
+          <div class="metric"><div class="metric-label"><i data-lucide="gauge"></i> Pressure</div><strong id="pressure">--</strong><small>Sea-level pressure</small></div>
+          <div class="metric"><div class="metric-label"><i data-lucide="eye"></i> Visibility</div><strong id="visibility">--</strong><small>Estimated visibility</small></div>
+          <div class="metric"><div class="metric-label"><i data-lucide="sun"></i> UV index</div><strong id="uvIndex">--</strong><small id="uvLabel">Today's peak</small></div>
+          <div class="metric"><div class="metric-label"><i data-lucide="cloud"></i> Cloud cover</div><strong id="cloudCover">--</strong><small>Sky coverage</small></div>
+        </div>
+      </article>
+    </section>
+
+    <section class="content-card glass-card">
+      <div class="section-heading"><div><p class="eyebrow">THE NEXT 24 HOURS</p><h3>Hourly forecast</h3></div><span class="section-note">Local time</span></div>
+      <div class="hourly-scroll" id="hourlyForecast"><div class="loading-line">Preparing hourly forecast…</div></div>
+    </section>
+
+    <section class="content-card glass-card">
+      <div class="section-heading"><div><p class="eyebrow">PLAN AHEAD</p><h3>7-day forecast</h3></div><span class="section-note">Next 7 days</span></div>
+      <div class="daily-list" id="dailyForecast"><div class="loading-line">Preparing weekly forecast…</div></div>
+    </section>
+
+
+    <section class="feature-grid">
+      <article class="content-card glass-card feature-card" id="aqiCard">
+        <div class="section-heading"><div><p class="eyebrow">BREATHE EASIER</p><h3>Air quality</h3></div><span class="heading-icon"><i data-lucide="wind"></i></span></div>
+        <div class="aqi-main">
+          <div class="aqi-score"><strong id="aqiValue">--</strong><span>US AQI</span></div>
+          <div><strong id="aqiStatus">Loading air quality…</strong><p id="aqiAdvice" class="muted">Checking local air conditions.</p></div>
+        </div>
+        <div class="pollutant-grid">
+          <div><span>PM2.5</span><strong id="pm25">--</strong><small>µg/m³</small></div>
+          <div><span>PM10</span><strong id="pm10">--</strong><small>µg/m³</small></div>
+          <div><span>European AQI</span><strong id="euAqi">--</strong><small>Index</small></div>
+        </div>
+        <div class="aqi-track"><span id="aqiBar"></span></div>
+        <p class="data-note">Air-quality estimates from Open-Meteo. AQI is an informational indicator.</p>
+      </article>
+
+      <article class="content-card glass-card feature-card alerts-card">
+        <div class="section-heading"><div><p class="eyebrow">STAY WEATHER-AWARE</p><h3>Weather alerts</h3></div><span class="heading-icon"><i data-lucide="bell-ring"></i></span></div>
+        <div id="weatherAlerts" class="alerts-list"><div class="loading-line">Checking forecast conditions…</div></div>
+        <p class="data-note">Heads-up messages are generated from forecast thresholds, not official emergency alerts.</p>
+      </article>
+    </section>
+
+    <section class="content-card glass-card">
+      <div class="section-heading"><div><p class="eyebrow">EXPLORE THE CONDITIONS</p><h3>Interactive weather map</h3></div><span class="section-note" id="mapLocationLabel">Current location</span></div>
+      <div id="weatherMap" class="weather-map" role="application" aria-label="Interactive map showing the selected city"></div>
+      <p class="data-note">Pan and zoom to explore the map. The marker shows the selected city and its current temperature.</p>
+    </section>
+
+    <section class="content-card glass-card">
+      <div class="section-heading"><div><p class="eyebrow">PLAN WITH CONFIDENCE</p><h3>Compare cities</h3></div><span class="section-note">Up to 3 cities</span></div>
+      <div class="compare-controls">
+        <input id="compareInput" type="search" placeholder="Add another city, e.g. Mumbai" autocomplete="off" aria-label="City to compare">
+        <button id="addCompareBtn" class="search-button">Add city <i data-lucide="plus"></i></button>
+      </div>
+      <div id="compareCities" class="compare-grid"><p class="muted">Add cities to compare their current weather.</p></div>
+    </section>
+
+    <section class="bottom-grid">
+      <article class="content-card glass-card">
+        <div class="section-heading"><div><p class="eyebrow">QUICK ACCESS</p><h3>Recent places</h3></div><button class="text-button" id="clearRecent">Clear</button></div>
+        <div class="chip-list" id="recentCities"><span class="muted">Your searched cities will appear here.</span></div>
+      </article>
+      <article class="content-card glass-card">
+        <div class="section-heading"><div><p class="eyebrow">SAVED LOCATIONS</p><h3>Favorites</h3></div><i data-lucide="bookmark" class="muted-icon"></i></div>
+        <div class="chip-list" id="favoriteCities"><span class="muted">Save a city with the heart icon.</span></div>
+      </article>
+    </section>
+
+    <footer class="footer">
+      <span>© <span id="year"></span> SkyCast Weather Studio</span>
+      <span>Weather data by <a href="https://open-meteo.com/" target="_blank" rel="noreferrer">Open-Meteo</a> · Built for curious minds</span>
+    </footer>
+  </main>
+  <div id="toast" class="toast" role="status"></div>
+  <script src="script.js"></script>
+</body>
+</html>
